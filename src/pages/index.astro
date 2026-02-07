@@ -1,0 +1,212 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Copy, Check, User, Phone, Calendar, Briefcase, MessageSquare, ClipboardCheck, RotateCcw, CircleCheckBig } from '@lucide/astro';
+---
+
+<Layout title="CopyMay - Mensajes personalizados">
+  <!-- HEADER -->
+  <header class="bg-surface border-b border-border px-6 py-4 shadow-sm">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+          <MessageSquare class="text-white" size={20} />
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">CopyMay</h1>
+          <p class="text-xs text-muted">Gestor de mensajes personalizados</p>
+        </div>
+      </div>
+      <button
+        id="btn-reset"
+        class="hidden items-center gap-2 px-3 py-2 text-sm text-muted hover:text-slate-900 hover:bg-muted-light rounded-lg transition-colors cursor-pointer"
+      >
+        <RotateCcw size={16} />
+        Nuevo archivo
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- ==================== STEP 1: UPLOAD ==================== -->
+    <section id="step-upload" class="flex flex-col items-center justify-center min-h-[70vh]">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Sube tu archivo Excel</h2>
+        <p class="text-muted">Arrastra tu archivo .xlsx o haz clic para seleccionarlo</p>
+      </div>
+
+      <label
+        id="drop-zone"
+        class="relative flex flex-col items-center justify-center w-full max-w-lg h-64 border-2 border-dashed border-slate-300 rounded-2xl bg-surface hover:border-primary hover:bg-primary-light/30 transition-all cursor-pointer group"
+      >
+        <input type="file" id="file-input" accept=".xlsx,.xls" class="hidden" />
+        <div class="flex flex-col items-center gap-4">
+          <div class="w-16 h-16 bg-primary-light rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Upload class="text-primary" size={32} />
+          </div>
+          <div class="text-center">
+            <p class="font-semibold text-slate-700">Arrastra tu archivo aqui</p>
+            <p class="text-sm text-muted mt-1">o <span class="text-primary font-medium">haz clic para buscar</span></p>
+          </div>
+          <p class="text-xs text-muted">Formatos: .xlsx, .xls</p>
+        </div>
+      </label>
+
+      <div id="upload-error" class="hidden mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm max-w-lg w-full"></div>
+    </section>
+
+    <!-- ==================== STEP 2: SHEET SELECTOR ==================== -->
+    <section id="step-sheets" class="hidden flex flex-col items-center justify-center min-h-[70vh]">
+      <div class="text-center mb-8">
+        <div class="w-14 h-14 bg-primary-light rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <FileSpreadsheet class="text-primary" size={28} />
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Selecciona una hoja</h2>
+        <p class="text-muted">El archivo tiene varias hojas. Elige la que contiene los contactos.</p>
+      </div>
+
+      <div id="sheets-list" class="w-full max-w-md space-y-3"></div>
+    </section>
+
+    <!-- ==================== STEP 3: MESSAGING ==================== -->
+    <section id="step-messaging" class="hidden">
+      <!-- Progress bar -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-slate-700">Progreso</span>
+          <span id="progress-text" class="text-sm font-semibold text-primary">0 de 0</span>
+        </div>
+        <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="flex items-center justify-between mt-1">
+          <span id="skipped-count" class="text-xs text-muted"></span>
+          <span id="sent-count" class="text-xs text-success font-medium"></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- LEFT: Contact Info -->
+        <div class="lg:col-span-1 space-y-4">
+          <!-- Contact Card -->
+          <div class="bg-surface rounded-xl border border-border p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-muted uppercase tracking-wide mb-4">Contacto actual</h3>
+
+            <div id="contact-badge" class="hidden mb-4 px-3 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5"></div>
+
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <User size={16} class="text-muted shrink-0" />
+                <div>
+                  <p class="text-xs text-muted">Nombre</p>
+                  <p id="contact-name" class="font-semibold text-slate-900">-</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <Phone size={16} class="text-muted shrink-0" />
+                <div>
+                  <p class="text-xs text-muted">Telefono</p>
+                  <p id="contact-phone" class="font-medium text-slate-700">-</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <Calendar size={16} class="text-muted shrink-0" />
+                <div>
+                  <p class="text-xs text-muted">Fecha</p>
+                  <p id="contact-date" class="font-medium text-slate-700">-</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <Briefcase size={16} class="text-muted shrink-0" />
+                <div>
+                  <p class="text-xs text-muted">Comercial</p>
+                  <p id="contact-commercial" class="font-medium text-slate-700">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact List -->
+          <div class="bg-surface rounded-xl border border-border shadow-sm">
+            <div class="p-4 border-b border-border">
+              <h3 class="text-sm font-semibold text-muted uppercase tracking-wide">Todos los contactos</h3>
+            </div>
+            <div id="contact-list" class="max-h-64 overflow-y-auto divide-y divide-border"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Message & Actions -->
+        <div class="lg:col-span-2 space-y-4">
+          <!-- Message Template Editor -->
+          <div class="bg-surface rounded-xl border border-border p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-muted uppercase tracking-wide">Plantilla del mensaje</h3>
+              <span class="text-xs text-muted bg-muted-light px-2 py-1 rounded">Usa <code class="font-mono text-primary">{'{nombre}'}</code> para el nombre</span>
+            </div>
+            <textarea
+              id="message-template"
+              rows="4"
+              class="w-full px-4 py-3 border border-border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              placeholder={'Escribe tu mensaje aqui... Usa {nombre} donde quieras que aparezca el nombre del contacto.'}
+            >{'Hola {nombre}, te damos la bienvenida. Estamos encantados de tenerte con nosotros. Si tienes cualquier duda no dudes en contactarnos.'}</textarea>
+          </div>
+
+          <!-- Personalized Message Preview -->
+          <div class="bg-surface rounded-xl border border-border p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-muted uppercase tracking-wide">Mensaje personalizado</h3>
+              <div id="copy-feedback" class="hidden items-center gap-1 text-xs font-semibold text-success">
+                <ClipboardCheck size={14} />
+                Copiado
+              </div>
+            </div>
+            <div
+              id="message-preview"
+              class="px-4 py-3 bg-muted-light rounded-lg text-sm leading-relaxed text-slate-800 min-h-[80px] whitespace-pre-wrap"
+            ></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-3">
+            <button
+              id="btn-prev"
+              class="flex items-center gap-2 px-5 py-3 bg-surface border border-border rounded-xl text-sm font-medium text-slate-700 hover:bg-muted-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled
+            >
+              <ChevronLeft size={18} />
+              Anterior
+            </button>
+
+            <button
+              id="btn-copy"
+              class="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors shadow-md shadow-primary/20 cursor-pointer active:scale-[0.98]"
+            >
+              <Copy size={18} />
+              <span>Copiar mensaje</span>
+            </button>
+
+            <button
+              id="btn-next"
+              class="flex items-center gap-2 px-5 py-3 bg-surface border border-border rounded-xl text-sm font-medium text-slate-700 hover:bg-muted-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled
+            >
+              Siguiente
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          <!-- All done message -->
+          <div id="all-done" class="hidden bg-success-light border border-green-200 rounded-xl p-6 text-center">
+            <CircleCheckBig size={40} class="text-success mx-auto mb-3" />
+            <h3 class="text-lg font-bold text-green-800 mb-1">Todos los mensajes enviados</h3>
+            <p class="text-sm text-green-700">Has completado el envio de todos los contactos de esta hoja.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<script>
+  import '../scripts/app.ts';
+</script>
