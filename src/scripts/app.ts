@@ -97,9 +97,17 @@ function handleFile(file: File) {
   reader.readAsArrayBuffer(file);
 }
 
-// Drag & drop
+// Prevent browser from opening files dropped anywhere on the page
+document.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
+document.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); });
+
+// Click on drop zone opens file picker
+dropZone.addEventListener('click', () => fileInput.click());
+
+// Drag & drop on the drop zone
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
+  e.stopPropagation();
   dropZone.classList.add('border-primary', 'bg-primary-light/30');
 });
 
@@ -109,6 +117,7 @@ dropZone.addEventListener('dragleave', () => {
 
 dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
+  e.stopPropagation();
   dropZone.classList.remove('border-primary', 'bg-primary-light/30');
   const file = e.dataTransfer?.files[0];
   if (file) handleFile(file);
@@ -177,6 +186,28 @@ function loadSheet(sheetName: string) {
     else if (norm.includes('telefono') || norm.includes('tel')) headerMap['telefono'] = h;
     else if (norm.includes('bienvenida') || norm.includes('mensaje')) headerMap['bienvenida'] = h;
     else if (norm.includes('comercial')) headerMap['comercial'] = h;
+  }
+
+  // Validate required columns
+  const requiredColumns: { key: string; label: string }[] = [
+    { key: 'nombre', label: 'Nombre' },
+    { key: 'telefono', label: 'Telefono' },
+  ];
+  const missingColumns = requiredColumns.filter((col) => !headerMap[col.key]);
+
+  if (missingColumns.length > 0) {
+    const missingLabels = missingColumns.map((c) => c.label).join(', ');
+    const foundLabels = Object.keys(headerMap).length > 0
+      ? Object.keys(headerMap).map((k) => headerMap[k]).join(', ')
+      : 'ninguna reconocida';
+    showStep('upload');
+    showError(
+      `El archivo no tiene las columnas requeridas: ${missingLabels}. ` +
+      `Columnas encontradas: ${headers.join(', ')}. ` +
+      `Columnas reconocidas: ${foundLabels}. ` +
+      `Asegurate de que el Excel contiene al menos: fecha, nombre, apellidos, telefono, mensaje bienvenida, comercial.`
+    );
+    return;
   }
 
   contacts = rawData.map((row) => {
