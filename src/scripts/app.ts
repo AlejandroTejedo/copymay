@@ -13,6 +13,7 @@ interface Contact {
 let contacts: Contact[] = [];
 let currentIndex = 0;
 let copiedSet = new Set<number>();
+let sentSet = new Set<number>();
 
 // DOM Elements
 const stepUpload = document.getElementById('step-upload')!;
@@ -263,6 +264,7 @@ function loadSheet(sheetName: string) {
 
   currentIndex = 0;
   copiedSet = new Set();
+  sentSet = new Set();
   showStep('messaging');
   renderContactList();
   renderCurrent();
@@ -302,6 +304,11 @@ function renderCurrent() {
       'mb-4 px-3 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 bg-success-light text-green-800';
     contactBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Bienvenida enviada`;
     contactBadge.classList.remove('hidden');
+  } else if (sentSet.has(currentIndex)) {
+    contactBadge.className =
+      'mb-4 px-3 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 bg-success-light text-green-800';
+    contactBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Enviado`;
+    contactBadge.classList.remove('hidden');
   } else if (copiedSet.has(currentIndex)) {
     contactBadge.className =
       'mb-4 px-3 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 bg-primary-light text-blue-800';
@@ -319,15 +326,15 @@ function renderCurrent() {
   btnNext.disabled = currentIndex === contacts.length - 1;
 
   // Progress
-  const totalPending = contacts.filter((_c, i) => !contacts[i].bienvenida && !copiedSet.has(i)).length;
-  const totalSent = contacts.filter((c) => c.bienvenida).length;
+  const totalSent = contacts.filter((c, i) => c.bienvenida || sentSet.has(i)).length;
   const totalCopied = copiedSet.size;
+  const totalPending = contacts.filter((_c, i) => !contacts[i].bienvenida && !sentSet.has(i) && !copiedSet.has(i)).length;
 
   progressText.textContent = `${currentIndex + 1} de ${contacts.length}`;
   progressBar.style.width = `${((currentIndex + 1) / contacts.length) * 100}%`;
 
   if (totalSent > 0) {
-    sentCount.textContent = `${totalSent} ya enviados`;
+    sentCount.textContent = `Enviados: ${totalSent}/${contacts.length}`;
   } else {
     sentCount.textContent = '';
   }
@@ -360,7 +367,7 @@ function renderContactList() {
     const fullName = [contact.nombre, contact.apellidos].filter(Boolean).join(' ');
 
     let statusDot = '';
-    if (contact.bienvenida) {
+    if (contact.bienvenida || sentSet.has(index)) {
       statusDot = '<span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>';
     } else if (copiedSet.has(index)) {
       statusDot = '<span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>';
@@ -406,7 +413,7 @@ function updateListHighlight() {
     const dot = el.querySelector('span');
     if (dot) {
       dot.className = 'w-2 h-2 rounded-full shrink-0';
-      if (contacts[idx].bienvenida) {
+      if (contacts[idx].bienvenida || sentSet.has(idx)) {
         dot.classList.add('bg-green-500');
       } else if (copiedSet.has(idx)) {
         dot.classList.add('bg-blue-500');
@@ -501,6 +508,8 @@ btnPrev.addEventListener('click', () => {
 
 btnNext.addEventListener('click', () => {
   if (currentIndex < contacts.length - 1) {
+    // Mark the current contact as sent before advancing
+    sentSet.add(currentIndex);
     currentIndex++;
     renderCurrent();
   }
@@ -510,6 +519,7 @@ btnReset.addEventListener('click', () => {
   contacts = [];
   currentIndex = 0;
   copiedSet = new Set();
+  sentSet = new Set();
   workbook = null;
   fileInput.value = '';
   showStep('upload');
