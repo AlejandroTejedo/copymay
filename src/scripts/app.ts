@@ -367,8 +367,10 @@ function renderContactList() {
     const fullName = [contact.nombre, contact.apellidos].filter(Boolean).join(' ');
 
     let statusDot = '';
-    if (contact.bienvenida || sentSet.has(index)) {
+    if (contact.bienvenida) {
       statusDot = '<span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>';
+    } else if (sentSet.has(index)) {
+      statusDot = '<span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>';
     } else if (copiedSet.has(index)) {
       statusDot = '<span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>';
     } else {
@@ -413,8 +415,10 @@ function updateListHighlight() {
     const dot = el.querySelector('span');
     if (dot) {
       dot.className = 'w-2 h-2 rounded-full shrink-0';
-      if (contacts[idx].bienvenida || sentSet.has(idx)) {
+      if (contacts[idx].bienvenida) {
         dot.classList.add('bg-green-500');
+      } else if (sentSet.has(idx)) {
+        dot.classList.add('bg-purple-500');
       } else if (copiedSet.has(idx)) {
         dot.classList.add('bg-blue-500');
       } else {
