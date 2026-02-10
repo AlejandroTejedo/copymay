@@ -25,7 +25,6 @@ const sheetsList = document.getElementById('sheets-list')!;
 const btnReset = document.getElementById('btn-reset')!;
 const btnPrev = document.getElementById('btn-prev') as HTMLButtonElement;
 const btnNext = document.getElementById('btn-next') as HTMLButtonElement;
-const btnCopy = document.getElementById('btn-copy')!;
 const progressText = document.getElementById('progress-text')!;
 const progressBar = document.getElementById('progress-bar') as HTMLElement;
 const skippedCount = document.getElementById('skipped-count')!;
@@ -42,8 +41,14 @@ const copyFeedback = document.getElementById('copy-feedback')!;
 const allDone = document.getElementById('all-done')!;
 const genderFemale = document.getElementById('gender-female') as HTMLButtonElement;
 const genderMale = document.getElementById('gender-male') as HTMLButtonElement;
+const btnToggleTemplate = document.getElementById('btn-toggle-template')!;
+const templateEditor = document.getElementById('template-editor')!;
+const templateChevron = document.getElementById('template-chevron')!;
+const btnCopyPreview = document.getElementById('btn-copy-preview')!;
+const toast = document.getElementById('toast')!;
 
 let selectedGender: 'femenino' | 'masculino' = 'femenino';
+let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 let workbook: XLSX.WorkBook | null = null;
 
 // ==================== FILE HANDLING ====================
@@ -412,27 +417,38 @@ function updateListHighlight() {
   });
 }
 
+// ==================== TOAST ====================
+
+function showToast() {
+  // Clear any existing timeout so rapid clicks don't leave stale timers
+  if (toastTimeout) {
+    clearTimeout(toastTimeout);
+    toastTimeout = null;
+  }
+
+  // Reset animation state
+  toast.classList.remove('toast-enter', 'toast-exit', 'hidden');
+  toast.classList.add('flex');
+
+  // Force reflow to restart animation if toast was already visible
+  toast.offsetHeight;
+
+  toast.classList.add('toast-enter');
+
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('toast-enter');
+    toast.classList.add('toast-exit');
+
+    toast.addEventListener('animationend', () => {
+      toast.classList.remove('flex', 'toast-exit');
+      toast.classList.add('hidden');
+    }, { once: true });
+  }, 2500);
+}
+
 // ==================== ACTIONS ====================
 
 function resetCopyButton() {
-  btnCopy.innerHTML = '';
-  const copyIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  copyIcon.setAttribute('width', '18');
-  copyIcon.setAttribute('height', '18');
-  copyIcon.setAttribute('viewBox', '0 0 24 24');
-  copyIcon.setAttribute('fill', 'none');
-  copyIcon.setAttribute('stroke', 'currentColor');
-  copyIcon.setAttribute('stroke-width', '2');
-  copyIcon.setAttribute('stroke-linecap', 'round');
-  copyIcon.setAttribute('stroke-linejoin', 'round');
-  copyIcon.innerHTML =
-    '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
-  const span = document.createElement('span');
-  span.textContent = 'Copiar mensaje';
-  btnCopy.appendChild(copyIcon);
-  btnCopy.appendChild(span);
-  btnCopy.classList.remove('bg-green-600', 'hover:bg-green-700', 'shadow-green-600/20');
-  btnCopy.classList.add('bg-primary', 'hover:bg-primary-hover', 'shadow-primary/20');
   copyFeedback.classList.add('hidden');
   copyFeedback.classList.remove('flex');
 }
@@ -445,28 +461,12 @@ async function copyMessage() {
     await navigator.clipboard.writeText(message);
     copiedSet.add(currentIndex);
 
-    // Visual feedback on button
-    btnCopy.innerHTML = '';
-    const checkIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    checkIcon.setAttribute('width', '18');
-    checkIcon.setAttribute('height', '18');
-    checkIcon.setAttribute('viewBox', '0 0 24 24');
-    checkIcon.setAttribute('fill', 'none');
-    checkIcon.setAttribute('stroke', 'currentColor');
-    checkIcon.setAttribute('stroke-width', '2.5');
-    checkIcon.setAttribute('stroke-linecap', 'round');
-    checkIcon.setAttribute('stroke-linejoin', 'round');
-    checkIcon.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
-    const span = document.createElement('span');
-    span.textContent = 'Copiado!';
-    btnCopy.appendChild(checkIcon);
-    btnCopy.appendChild(span);
-    btnCopy.classList.remove('bg-primary', 'hover:bg-primary-hover', 'shadow-primary/20');
-    btnCopy.classList.add('bg-green-600', 'hover:bg-green-700', 'shadow-green-600/20');
-
     // Show header feedback
     copyFeedback.classList.remove('hidden');
     copyFeedback.classList.add('flex');
+
+    // Show toast notification
+    showToast();
 
     // Update list
     updateListHighlight();
@@ -482,14 +482,16 @@ async function copyMessage() {
     document.execCommand('copy');
     document.body.removeChild(textarea);
     copiedSet.add(currentIndex);
+
+    // Show toast notification
+    showToast();
+
     updateListHighlight();
     renderCurrent();
   }
 }
 
 // Event listeners
-btnCopy.addEventListener('click', copyMessage);
-
 btnPrev.addEventListener('click', () => {
   if (currentIndex > 0) {
     currentIndex--;
@@ -552,6 +554,32 @@ function setGender(gender: 'femenino' | 'masculino') {
 
 genderFemale.addEventListener('click', () => setGender('femenino'));
 genderMale.addEventListener('click', () => setGender('masculino'));
+
+// ==================== TEMPLATE EDITOR TOGGLE ====================
+
+btnToggleTemplate.addEventListener('click', () => {
+  const isHidden = templateEditor.classList.contains('hidden');
+
+  if (isHidden) {
+    templateEditor.classList.remove('hidden');
+    templateChevron.style.transform = 'rotate(180deg)';
+    btnToggleTemplate.setAttribute('aria-expanded', 'true');
+    // Remove rounded bottom from button when editor is open
+    btnToggleTemplate.classList.remove('rounded-xl');
+    btnToggleTemplate.classList.add('rounded-t-xl');
+  } else {
+    templateEditor.classList.add('hidden');
+    templateChevron.style.transform = 'rotate(0deg)';
+    btnToggleTemplate.setAttribute('aria-expanded', 'false');
+    // Restore full rounding when editor is closed
+    btnToggleTemplate.classList.remove('rounded-t-xl');
+    btnToggleTemplate.classList.add('rounded-xl');
+  }
+});
+
+// ==================== COPY PREVIEW BUTTON ====================
+
+btnCopyPreview.addEventListener('click', copyMessage);
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
