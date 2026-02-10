@@ -2,8 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import { Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Copy, Check, User, Phone, Calendar, Briefcase, MessageSquare, ClipboardCheck, RotateCcw, CircleCheckBig } from '@lucide/astro';
 
-const defaultTemplate = 'Hola {nombre}, te damos la bienvenida. Estamos encantados de tenerte con nosotros. Si tienes cualquier duda no dudes en contactarnos.';
-const templatePlaceholder = 'Escribe tu mensaje aqui... Usa {nombre} donde quieras que aparezca el nombre del contacto.';
+const defaultTemplate = '¡{bienvenida} {nombre} a Fitness Park Aqua! 😃\n\nAl inscribirte te regalamos el PACK ULTIMATE las 4 primeras semanas y sin permanencia, (luego 20€/4 semanas).\n\nTe contamos todo lo que podrás disfrutar:\n\n✅ Clases colectivas con coach\n\n✅ La oportunidad de traer 1 INVITADO cada día para que entrene contigo. 1 invitación al día. Puede ser la misma persona, pero el invitado tiene que acceder junto al cliente.\n\n✅ Hidromasaje\n \n✅ Báscula de escáner biométrico\n \n✅ Fuente de bebida isotónica (450ml cada 20 minutos).\n\n✅ 10% de descuento en toda nuestra tienda (accesorios, nutrición, toallas…\n\nNo pierdas la oportunidad de disfrutar de todos estos servicios adicionales.\n\nRecuerda que se renueva automáticamente y las cancelaciones deben ser solicitadas 5 días previos a tu siguiente facturación (a las 5 semanas de tu inscripción), puedes hacerlo por WhatsApp o acercándote a la recepción.\n\nCualquier duda, no dudes en hacérnoslo saber.';
+const templatePlaceholder = 'Escribe tu mensaje aqui... Usa {nombre} para el nombre y {bienvenida} para Bienvenido/a segun el genero.';
 ---
 
 <Layout title="CopyMay - Mensajes personalizados">
@@ -144,8 +144,38 @@ const templatePlaceholder = 'Escribe tu mensaje aqui... Usa {nombre} donde quier
           <div class="bg-surface rounded-xl border border-border p-5 shadow-sm">
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-sm font-semibold text-muted uppercase tracking-wide">Plantilla del mensaje</h3>
-              <span class="text-xs text-muted bg-muted-light px-2 py-1 rounded">Usa <code class="font-mono text-primary">{'{nombre}'}</code> para el nombre</span>
+              <span class="text-xs text-muted bg-muted-light px-2 py-1 rounded">
+                Usa <code class="font-mono text-primary">{'{nombre}'}</code> y <code class="font-mono text-primary">{'{bienvenida}'}</code>
+              </span>
             </div>
+
+            <!-- Gender Toggle -->
+            <fieldset class="mb-3">
+              <legend class="sr-only">Genero del contacto</legend>
+              <div id="gender-toggle" class="inline-flex rounded-lg border border-border p-0.5 bg-muted-light" role="radiogroup" aria-label="Seleccionar genero">
+                <button
+                  type="button"
+                  id="gender-female"
+                  class="gender-option px-4 py-1.5 text-sm font-medium rounded-md transition-all bg-primary text-white shadow-sm"
+                  role="radio"
+                  aria-checked="true"
+                  data-gender="femenino"
+                >
+                  Femenino
+                </button>
+                <button
+                  type="button"
+                  id="gender-male"
+                  class="gender-option px-4 py-1.5 text-sm font-medium rounded-md transition-all text-muted hover:text-slate-700"
+                  role="radio"
+                  aria-checked="false"
+                  data-gender="masculino"
+                >
+                  Masculino
+                </button>
+              </div>
+            </fieldset>
+
             <textarea
               id="message-template"
               rows="4"

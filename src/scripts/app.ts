@@ -40,7 +40,10 @@ const messageTemplate = document.getElementById('message-template') as HTMLTextA
 const messagePreview = document.getElementById('message-preview')!;
 const copyFeedback = document.getElementById('copy-feedback')!;
 const allDone = document.getElementById('all-done')!;
+const genderFemale = document.getElementById('gender-female') as HTMLButtonElement;
+const genderMale = document.getElementById('gender-male') as HTMLButtonElement;
 
+let selectedGender: 'femenino' | 'masculino' = 'femenino';
 let workbook: XLSX.WorkBook | null = null;
 
 // ==================== FILE HANDLING ====================
@@ -265,7 +268,9 @@ function loadSheet(sheetName: string) {
 function getPersonalizedMessage(contact: Contact): string {
   const template = messageTemplate.value;
   const fullName = [contact.nombre, contact.apellidos].filter(Boolean).join(' ');
+  const bienvenidaText = selectedGender === 'masculino' ? 'Bienvenido' : 'Bienvenida';
   return template
+    .replace(/\{bienvenida\}/gi, bienvenidaText)
     .replace(/\{nombre\}/gi, contact.nombre)
     .replace(/\{apellidos\}/gi, contact.apellidos)
     .replace(/\{nombre_completo\}/gi, fullName)
@@ -514,6 +519,39 @@ messageTemplate.addEventListener('input', () => {
     messagePreview.textContent = getPersonalizedMessage(contacts[currentIndex]);
   }
 });
+
+// ==================== GENDER TOGGLE ====================
+
+function setGender(gender: 'femenino' | 'masculino') {
+  selectedGender = gender;
+
+  const activeClasses = ['bg-primary', 'text-white', 'shadow-sm'];
+  const inactiveClasses = ['text-muted', 'hover:text-slate-700'];
+
+  if (gender === 'femenino') {
+    genderFemale.classList.add(...activeClasses);
+    genderFemale.classList.remove(...inactiveClasses);
+    genderFemale.setAttribute('aria-checked', 'true');
+    genderMale.classList.remove(...activeClasses);
+    genderMale.classList.add(...inactiveClasses);
+    genderMale.setAttribute('aria-checked', 'false');
+  } else {
+    genderMale.classList.add(...activeClasses);
+    genderMale.classList.remove(...inactiveClasses);
+    genderMale.setAttribute('aria-checked', 'true');
+    genderFemale.classList.remove(...activeClasses);
+    genderFemale.classList.add(...inactiveClasses);
+    genderFemale.setAttribute('aria-checked', 'false');
+  }
+
+  // Update preview if contacts are loaded
+  if (contacts.length > 0) {
+    messagePreview.textContent = getPersonalizedMessage(contacts[currentIndex]);
+  }
+}
+
+genderFemale.addEventListener('click', () => setGender('femenino'));
+genderMale.addEventListener('click', () => setGender('masculino'));
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
